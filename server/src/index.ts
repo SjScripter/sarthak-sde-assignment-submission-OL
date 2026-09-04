@@ -5,9 +5,9 @@ import { PrismaClient } from '@prisma/client';
 import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { ExpressAdapter } from '@bull-board/express';
-import { emailQueue } from './queue';
+import { emailQueue } from './queue/index';
 import { emailWorker } from './queue/worker';
-import routes from './routes';
+import routes from './routes/index';
 
 dotenv.config();
 

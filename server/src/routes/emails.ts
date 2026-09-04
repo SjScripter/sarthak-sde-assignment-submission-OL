@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../index';
-import { emailQueue } from '../queue';
+import { emailQueue } from '../queue/index';
 import { searchEmails } from '../services/elastic';
 
 const router = Router();
