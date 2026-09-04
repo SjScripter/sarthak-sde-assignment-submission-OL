@@ -14,9 +14,10 @@ const Dashboard: React.FC<{ user: any }> = ({ user }) => {
   const fetchData = async () => {
     setLoading(true);
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
       const [scheduledRes, sentRes] = await Promise.all([
-        axios.get(`http://localhost:4000/api/emails/scheduled/${user.id}`),
-        axios.get(`http://localhost:4000/api/emails/sent/${user.id}`)
+        axios.get(`${API_URL}/api/emails/scheduled/${user.id}`),
+        axios.get(`${API_URL}/api/emails/sent/${user.id}`)
       ]);
       setScheduledEmails(scheduledRes.data);
       setSentEmails(sentRes.data);
@@ -37,7 +38,8 @@ const Dashboard: React.FC<{ user: any }> = ({ user }) => {
     
     if (q.length > 2) {
       try {
-        const res = await axios.get(`http://localhost:4000/api/emails/search?q=${q}`);
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+        const res = await axios.get(`${API_URL}/api/emails/search?q=${q}`);
         // Assuming search returns both types, we can filter them locally based on active tab
         // For simplicity here, we'll just show the concept
         console.log("Search results:", res.data);

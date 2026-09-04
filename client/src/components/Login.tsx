@@ -7,7 +7,8 @@ const Login: React.FC<{ onLogin: (user: any) => void }> = ({ onLogin }) => {
   const handleMockGoogleLogin = async () => {
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:4000/api/auth/google', {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+      const response = await axios.post(`${API_URL}/api/auth/google`, {
         email: 'test@reachinbox.ai',
         name: 'Test User',
         avatar: 'https://ui-avatars.com/api/?name=Test+User&background=random',

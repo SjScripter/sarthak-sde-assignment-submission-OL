@@ -41,7 +41,8 @@ const ComposeModal: React.FC<{ user: any, onClose: () => void, onSuccess: () => 
 
     setLoading(true);
     try {
-      await axios.post('http://localhost:4000/api/emails/schedule', {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+      await axios.post(`${API_URL}/api/emails/schedule`, {
         userId: user.id,
         subject,
         body,
