@@ -1,54 +1,71 @@
 # ReachInbox - Full-stack Email Job Scheduler
 
-A production-grade email scheduler service and dashboard.
+A production-grade email scheduler service and dashboard, designed for high-concurrency and resilience.
 
-## Architecture
+## 🚀 Live Demo
+- **Frontend Hosted on Vercel:** [Your Vercel URL Here]
 
-This project is structured as a monorepo containing a `server` (backend) and `client` (frontend).
+*(Note: The backend requires a local setup for the SMTP, Redis, Elasticsearch, and PostgreSQL connections to fully function)*
 
-### Scheduling & Persistence
-- We use **BullMQ** backed by **Redis** as the job queue.
-- To schedule emails, we use BullMQ's built-in `delay` feature rather than cron jobs. This means we calculate the time difference between "now" and the "scheduled time" and add the job with that delay.
-- Because jobs are stored in Redis, they persist across server restarts. If the Node.js process crashes, BullMQ will pick up the delayed jobs exactly where it left off when it restarts.
+## 🛠️ Tech Stack & Technologies Used
 
-### Rate Limiting & Concurrency
-- **Concurrency**: The BullMQ worker is configured to process up to 5 jobs concurrently (`concurrency: 5`).
-- **Hourly Rate Limit**: Implemented using a custom Redis counter keyed by `rate_limit:{userId}:{currentHourTimestamp}`. 
-  - Before sending, the worker increments this counter.
+### Frontend
+- **React 18** with **TypeScript**
+- **Vite** for blazing fast builds
+- **Tailwind CSS** for responsive, modern styling
+- **Lucide React** for icons
+- **Axios** for API requests
+- **PapaParse** for robust CSV parsing
+
+### Backend
+- **Node.js** & **Express** with **TypeScript**
+- **Prisma ORM** for type-safe database interactions
+- **PostgreSQL** (Hosted on Supabase) for primary data storage
+- **BullMQ** backed by **Redis** (Upstash) for the robust job queue and email scheduling
+- **Elasticsearch** (Bonsai) for lightning-fast indexing and searching of sent emails
+
+### Integrations
+- **Ethereal Email:** Mock SMTP service for sending emails safely
+- **Slack API:** OAuth flow and webhook integration for sending alerts when rate limits are hit
+
+## 🏗️ Architecture & Core Features
+
+### 1. Scheduling & Persistence (BullMQ + Redis)
+- To schedule emails, we use BullMQ's built-in `delay` feature rather than standard cron jobs. The time difference is calculated between "now" and the "scheduled time".
+- Because jobs are stored in Redis, they persist across server restarts. If the Node.js process crashes, BullMQ picks up the delayed jobs exactly where it left off, ensuring zero data loss.
+- **Dashboard:** A BullMQ admin dashboard is available at `/admin/queues` to visually monitor pending, active, and failed jobs.
+
+### 2. Rate Limiting & Concurrency
+- **Concurrency:** The BullMQ worker is configured to process up to 5 jobs concurrently (`concurrency: 5`).
+- **Hourly Rate Limit:** Implemented using a custom Redis counter keyed by `rate_limit:{userId}:{currentHourTimestamp}`. 
+  - Before sending an email, the worker increments this counter.
   - If the count exceeds the `hourlyLimit`, the worker calculates the time remaining until the next hour window and re-schedules the job (using `job.moveToDelayed`) to run then.
-  - This preserves the queue state without dropping jobs.
-- **Delay Between Sends**: A simple `sleep` is implemented in the worker to simulate a provider delay (e.g., waiting 2 seconds before calling the SMTP transport).
+  - This preserves the queue state without dropping any emails.
+- **Delay Between Sends:** A `sleep` function is implemented in the worker to simulate a provider delay (e.g., waiting 2 seconds before calling the SMTP transport).
 
-### Slack Notifications
-- A mock OAuth flow is provided. You can connect a Slack workspace and it will save the token/webhook to the database.
-- When an hourly rate limit is hit, the worker checks if the user has a connected Slack account and sends an alert.
+### 3. Slack Notifications
+- A complete OAuth flow is provided. Users can connect a Slack workspace, which securely saves the token and webhook URL to the database.
+- When an hourly rate limit is hit, the worker checks if the user has a connected Slack account and dispatches an automated alert.
 
-### Elasticsearch
-- Sent emails are indexed in an Elasticsearch cluster.
-- The dashboard allows searching across these indexed emails (Subject, Body, Receiver) via the backend search API.
+### 4. Elasticsearch Integration
+- Sent emails are immediately indexed in an Elasticsearch cluster.
+- The dashboard allows lightning-fast, full-text searching across these indexed emails (searching by Subject, Body, or Receiver) via the backend search API.
 
-## Requirements
+---
 
+## 💻 Local Setup & Installation
+
+### Requirements
 - Node.js (v18+)
-- Docker (for Redis, PostgreSQL, Elasticsearch)
 
-## Getting Started
-
-### 1. Start Infrastructure
-Run the following at the root of the project to spin up PostgreSQL, Redis, and Elasticsearch.
-```bash
-docker compose up -d
-```
-
-### 2. Setup Backend (`/server`)
+### 1. Setup Backend (`/server`)
 
 Create a `.env` file in the `/server` directory:
 ```env
 PORT=4000
-DATABASE_URL="postgresql://root:rootpassword@localhost:5432/reachinbox_db?schema=public"
-REDIS_HOST="localhost"
-REDIS_PORT=6379
-ELASTICSEARCH_NODE="http://localhost:9200"
+DATABASE_URL="postgresql://[USER]:[PASSWORD]@[HOST]:5432/postgres"
+REDIS_URL="redis://[USER]:[PASSWORD]@[HOST]:6379"
+ELASTICSEARCH_NODE="https://[USER]:[PASSWORD]@[HOST]"
 
 # Ethereal Email (Generate at https://ethereal.email/)
 SMTP_HOST="smtp.ethereal.email"
@@ -59,7 +76,7 @@ SMTP_PASS="your-ethereal-pass"
 # Auth Config
 JWT_SECRET="super-secret-jwt-key"
 
-# Slack OAuth (Optional for real test, required if you want actual Slack msgs)
+# Slack OAuth 
 SLACK_CLIENT_ID=""
 SLACK_CLIENT_SECRET=""
 SLACK_REDIRECT_URI="http://localhost:4000/api/slack/oauth_redirect"
@@ -75,7 +92,7 @@ npm run dev
 
 *Note: The BullMQ dashboard is available at `http://localhost:4000/admin/queues`*
 
-### 3. Setup Frontend (`/client`)
+### 2. Setup Frontend (`/client`)
 
 Open a new terminal:
 ```bash
